@@ -4,28 +4,40 @@ const ManageUsers = () => {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
     role: 'PATIENT',
-    password: ''
+    passwordHash: ''
   })
 
-  // Mock users data
-  const mockUsers = [
-    { id: 1, name: 'John Patient', email: 'patient@example.com', role: 'PATIENT', status: 'Active' },
-    { id: 2, name: 'Dr. Smith', email: 'doctor@example.com', role: 'DOCTOR', status: 'Active' },
-    { id: 3, name: 'Admin User', email: 'admin@example.com', role: 'ADMIN', status: 'Active' },
-    { id: 4, name: 'Sarah Wilson', email: 'sarah@example.com', role: 'PATIENT', status: 'Active' },
-    { id: 5, name: 'Dr. Johnson', email: 'dr.johnson@clinic.com', role: 'DOCTOR', status: 'Inactive' }
-  ]
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('http://localhost:8080/api/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data)
+      } else {
+        console.error('Failed to fetch users')
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setUsers(mockUsers)
-      setLoading(false)
-    }, 500)
+    fetchUsers()
   }, [])
 
   const getRoleColor = (role) => {
@@ -47,20 +59,84 @@ const ManageUsers = () => {
     setShowAddModal(true)
   }
 
-  const handleSaveUser = () => {
-    const newUserWithId = {
-      id: users.length + 1,
-      ...newUser,
-      status: 'Active'
+  const handleSaveUser = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newUser)
+      })
+      
+      if (response.ok) {
+        fetchUsers() // Refresh the list
+        setShowAddModal(false)
+        setNewUser({ name: '', email: '', role: 'PATIENT', passwordHash: '' })
+      }
+    } catch (error) {
+      console.error('Error creating user:', error)
     }
-    setUsers([...users, newUserWithId])
-    setShowAddModal(false)
-    setNewUser({ name: '', email: '', role: 'PATIENT', password: '' })
+  }
+
+  const handleEditUser = (user) => {
+    setEditingUser(user)
+    setShowEditModal(true)
+  }
+
+  const handleUpdateUser = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`http://localhost:8080/api/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editingUser)
+      })
+      
+      if (response.ok) {
+        fetchUsers()
+        setShowEditModal(false)
+        setEditingUser(null)
+      }
+    } catch (error) {
+      console.error('Error updating user:', error)
+    }
+  }
+
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch(`http://localhost:8080/api/users/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          fetchUsers()
+        }
+      } catch (error) {
+        console.error('Error deleting user:', error)
+      }
+    }
   }
 
   const handleInputChange = (e) => {
     setNewUser({
       ...newUser,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handleEditInputChange = (e) => {
+    setEditingUser({
+      ...editingUser,
       [e.target.name]: e.target.value
     })
   }
@@ -114,16 +190,22 @@ const ManageUsers = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
-                      {user.status}
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Active
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-4">
+                    <button 
+                      onClick={() => handleEditUser(user)}
+                      className="text-blue-600 hover:text-blue-900 mr-4"
+                    >
                       Edit
                     </button>
-                    <button className="text-red-600 hover:text-red-900">
-                      {user.status === 'Active' ? 'Deactivate' : 'Activate'}
+                    <button 
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -141,6 +223,57 @@ const ManageUsers = () => {
           Add New User
         </button>
       </div>
+      
+      {/* Edit User Modal */}
+      {showEditModal && (
+        <div className="modal-overlay">
+          <div className="modal-content p-6">
+            <h3 className="text-lg font-semibold mb-4">Edit User</h3>
+            <div className="space-y-4">
+              <input
+                type="text"
+                name="name"
+                placeholder="Name"
+                value={editingUser?.name || ''}
+                onChange={handleEditInputChange}
+                className="form-input"
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={editingUser?.email || ''}
+                onChange={handleEditInputChange}
+                className="form-input"
+              />
+              <select
+                name="role"
+                value={editingUser?.role || 'PATIENT'}
+                onChange={handleEditInputChange}
+                className="form-input"
+              >
+                <option value="PATIENT">Patient</option>
+                <option value="DOCTOR">Doctor</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateUser}
+                className="btn-primary"
+              >
+                Update User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

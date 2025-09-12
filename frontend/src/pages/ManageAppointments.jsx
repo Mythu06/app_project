@@ -8,7 +8,10 @@ const ManageAppointments = () => {
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
+        console.log('DEBUG: Fetching appointments...')
         const data = await appointmentService.getMyAppointments()
+        console.log('DEBUG: Received appointments:', data)
+        console.log('DEBUG: Number of appointments:', data.length)
         setAppointments(data)
       } catch (error) {
         console.error('Error fetching appointments:', error)
@@ -21,13 +24,16 @@ const ManageAppointments = () => {
   }, [])
 
   const handleStatusUpdate = async (appointmentId, newStatus) => {
+    console.log('Updating appointment:', appointmentId, 'to status:', newStatus)
     try {
-      await appointmentService.updateAppointmentStatus(appointmentId, newStatus)
+      const updatedAppointment = await appointmentService.updateAppointmentStatus(appointmentId, newStatus)
+      console.log('Update successful:', updatedAppointment)
       setAppointments(appointments.map(apt => 
         apt.id === appointmentId ? { ...apt, status: newStatus } : apt
       ))
     } catch (error) {
       console.error('Error updating appointment:', error)
+      alert('Failed to update appointment status. Please try again.')
     }
   }
 
@@ -60,10 +66,14 @@ const ManageAppointments = () => {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Patient: {appointment.patient?.name || 'Unknown'}
+                      Patient: {appointment.patient?.name || 'Unknown Patient'}
+                      <span className="text-sm text-gray-500 ml-2">(ID: {appointment.patient?.id || 'N/A'})</span>
                     </h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-3">
+                      <div>
+                        <span className="font-medium">Appointment ID:</span> {appointment.id}
+                      </div>
                       <div>
                         <span className="font-medium">Date:</span> {appointment.appointmentDate}
                       </div>

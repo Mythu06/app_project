@@ -9,13 +9,16 @@ import com.example.medicine.med_pres.model.Doctor;
 import com.example.medicine.med_pres.model.Prescription;
 import com.example.medicine.med_pres.model.User;
 import com.example.medicine.med_pres.repository.PrescriptionRepository;
+import com.example.medicine.med_pres.service.UserService;
 
 @Service
 public class PrescriptionService {
 private final PrescriptionRepository prescriptionRepository;
+    private final UserService userService;
 
-    public PrescriptionService(PrescriptionRepository prescriptionRepository) {
+    public PrescriptionService(PrescriptionRepository prescriptionRepository, UserService userService) {
         this.prescriptionRepository = prescriptionRepository;
+        this.userService = userService;
     }
 
     // Create Prescription
@@ -38,8 +41,33 @@ private final PrescriptionRepository prescriptionRepository;
     }
 
     public List<Prescription> getPrescriptionsByDoctor(Doctor doctorId) {
-    return prescriptionRepository.findByDoctorId(doctorId);
-}
+        return prescriptionRepository.findByDoctorId(doctorId);
+    }
+    
+    // Get prescriptions by patient email
+    public List<Prescription> getPrescriptionsByPatientEmail(String patientEmail) {
+        List<Prescription> allPrescriptions = prescriptionRepository.findAll();
+        System.out.println("DEBUG: Total prescriptions in database: " + allPrescriptions.size());
+        
+        List<Prescription> filtered = allPrescriptions.stream()
+            .filter(prescription -> {
+                if (prescription.getPatient() == null) {
+                    System.out.println("DEBUG: Prescription " + prescription.getId() + " has no patient");
+                    return false;
+                }
+                String prescriptionPatientEmail = prescription.getPatient().getEmail();
+                boolean matches = patientEmail.equals(prescriptionPatientEmail);
+                System.out.println("DEBUG: Prescription " + prescription.getId() + 
+                    " - Patient: " + prescriptionPatientEmail + 
+                    " - Medication: " + prescription.getMedicationName() +
+                    " - Matches: " + matches);
+                return matches;
+            })
+            .collect(java.util.stream.Collectors.toList());
+            
+        System.out.println("DEBUG: Filtered prescriptions for " + patientEmail + ": " + filtered.size());
+        return filtered;
+    }
 
     // Update Prescription
     public Prescription updatePrescription(Long id, Prescription updatedPrescription) {

@@ -7,7 +7,11 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'PATIENT',
+    specialization: '',
+    clinicName: '',
+    location: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -40,7 +44,19 @@ const Register = () => {
       return
     }
 
-    const result = await register(formData.name, formData.email, formData.password)
+    const userData = {
+      name: formData.name,
+      email: formData.email,
+      passwordHash: formData.password,
+      role: formData.role,
+      ...(formData.role === 'DOCTOR' && {
+        specialization: formData.specialization,
+        clinicName: formData.clinicName,
+        location: formData.location
+      })
+    }
+    
+    const result = await register(userData)
     
     if (result.success) {
       setSuccess(true)
@@ -48,7 +64,11 @@ const Register = () => {
         navigate('/login')
       }, 2000)
     } else {
-      setError(result.error)
+      if (result.error.includes('already registered')) {
+        setError('This email is already registered. Please use a different email or login instead.')
+      } else {
+        setError(result.error)
+      }
     }
     
     setLoading(false)
@@ -80,7 +100,7 @@ const Register = () => {
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
             <p className="text-blue-800 text-sm text-center">
-              <strong>Demo Mode:</strong> Registration creates mock accounts for frontend demo
+              <strong>Live System:</strong> Registration creates real accounts in the database
             </p>
           </div>
         </div>
@@ -156,6 +176,89 @@ const Register = () => {
                 onChange={handleChange}
               />
             </div>
+            
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                I am registering as
+              </label>
+              <select
+                id="role"
+                name="role"
+                required
+                className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value={formData.role}
+                onChange={handleChange}
+              >
+                <option value="PATIENT">Patient</option>
+                <option value="DOCTOR">Doctor</option>
+              </select>
+            </div>
+            
+            {/* Doctor-specific fields */}
+            {formData.role === 'DOCTOR' && (
+              <>
+                <div>
+                  <label htmlFor="specialization" className="block text-sm font-medium text-gray-700">
+                    Specialization *
+                  </label>
+                  <select
+                    id="specialization"
+                    name="specialization"
+                    required
+                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.specialization}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select Specialization</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="General Medicine">General Medicine</option>
+                    <option value="Pediatrics">Pediatrics</option>
+                    <option value="Orthopedics">Orthopedics</option>
+                    <option value="Dermatology">Dermatology</option>
+                    <option value="Neurology">Neurology</option>
+                    <option value="Psychiatry">Psychiatry</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label htmlFor="clinicName" className="block text-sm font-medium text-gray-700">
+                    Clinic/Hospital Name *
+                  </label>
+                  <input
+                    id="clinicName"
+                    name="clinicName"
+                    type="text"
+                    required
+                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter clinic or hospital name"
+                    value={formData.clinicName}
+                    onChange={handleChange}
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+                    Location *
+                  </label>
+                  <select
+                    id="location"
+                    name="location"
+                    required
+                    className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.location}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select Location</option>
+                    <option value="Downtown">Downtown</option>
+                    <option value="Uptown">Uptown</option>
+                    <option value="Midtown">Midtown</option>
+                    <option value="Suburbs">Suburbs</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           <div>

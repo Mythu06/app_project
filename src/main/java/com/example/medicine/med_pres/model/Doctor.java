@@ -36,4 +36,10 @@ public class Doctor {
 
     @Column(name = "clinic_name")
     private String clinicName;
+    
+    @Column
+    private String location;
+    
+    @Column(name = "available_slots")
+    private String availableSlots; // JSON string of available time slots
 }

@@ -28,7 +28,17 @@ const BookAppointment = () => {
         const selectedDoctor = doctors.find(d => d.id === parseInt(doctorId))
         setDoctor(selectedDoctor)
         if (selectedDoctor?.availableSlots) {
-          setAvailableSlots(selectedDoctor.availableSlots)
+          try {
+            // Parse JSON string from backend
+            const slots = JSON.parse(selectedDoctor.availableSlots)
+            setAvailableSlots(slots)
+          } catch (error) {
+            // Fallback to default slots if parsing fails
+            setAvailableSlots(['09:00', '10:30', '14:00', '15:30'])
+          }
+        } else {
+          // Default slots if none provided
+          setAvailableSlots(['09:00', '10:30', '14:00', '15:30'])
         }
       } catch (error) {
         console.error('Error fetching doctor:', error)
