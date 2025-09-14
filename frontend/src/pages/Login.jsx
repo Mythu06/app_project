@@ -48,15 +48,7 @@ const Login = () => {
             Medical Appointment & Prescription Tracker
           </p>
           
-          {/* Test Accounts */}
-          <div className="bg-white bg-opacity-10 rounded-lg p-4 mt-4 text-white text-sm">
-            <h3 className="font-semibold mb-2">Test Accounts:</h3>
-            <div className="space-y-1">
-              <p><strong>Admin:</strong> admin@example.com / admin123</p>
-              <p><strong>Doctor:</strong> doctor@example.com / doctor123</p>
-              <p><strong>Patient:</strong> patient@example.com / patient123</p>
-            </div>
-          </div>
+
         </div>
         
         <div className="card mt-8">

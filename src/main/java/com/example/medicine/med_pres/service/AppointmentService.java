@@ -9,7 +9,6 @@ import com.example.medicine.med_pres.model.Appointment;
 import com.example.medicine.med_pres.model.Doctor;
 import com.example.medicine.med_pres.model.User;
 import com.example.medicine.med_pres.repository.AppointmentRepository;
-import com.example.medicine.med_pres.service.UserService;
 
 @Service
 public class AppointmentService {

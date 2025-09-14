@@ -16,23 +16,18 @@ const Navbar = () => {
       return (
         <>
           <Link to="/dashboard" className="nav-link">Dashboard</Link>
-          <Link to="/search-doctors" className="nav-link">Find Doctors</Link>
-          <Link to="/my-appointments" className="nav-link">My Appointments</Link>
-          <Link to="/my-prescriptions" className="nav-link">My Prescriptions</Link>
         </>
       )
     } else if (user?.role === 'DOCTOR') {
       return (
         <>
           <Link to="/dashboard" className="nav-link">Dashboard</Link>
-          <Link to="/manage-appointments" className="nav-link">Manage Appointments</Link>
         </>
       )
     } else if (user?.role === 'ADMIN') {
       return (
         <>
           <Link to="/dashboard" className="nav-link">Dashboard</Link>
-          <Link to="/manage-doctors" className="nav-link">Manage Doctors</Link>
         </>
       )
     }
@@ -54,7 +49,7 @@ const Navbar = () => {
             
             <div className="flex items-center space-x-4 ml-6">
               <span className="text-white text-sm">
-                {user?.email} ({user?.role})
+                {user?.name} ({user?.role})
               </span>
               <button
                 onClick={handleLogout}

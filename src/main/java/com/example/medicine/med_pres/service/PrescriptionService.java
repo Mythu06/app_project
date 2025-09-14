@@ -10,20 +10,81 @@ import com.example.medicine.med_pres.model.Prescription;
 import com.example.medicine.med_pres.model.User;
 import com.example.medicine.med_pres.repository.PrescriptionRepository;
 import com.example.medicine.med_pres.service.UserService;
+import com.example.medicine.med_pres.service.DoctorService;
 
 @Service
 public class PrescriptionService {
 private final PrescriptionRepository prescriptionRepository;
     private final UserService userService;
+    private final DoctorService doctorService;
 
-    public PrescriptionService(PrescriptionRepository prescriptionRepository, UserService userService) {
+    public PrescriptionService(PrescriptionRepository prescriptionRepository, UserService userService, DoctorService doctorService) {
         this.prescriptionRepository = prescriptionRepository;
         this.userService = userService;
+        this.doctorService = doctorService;
     }
 
     // Create Prescription
     public Prescription createPrescription(Prescription prescription) {
         return prescriptionRepository.save(prescription);
+    }
+    
+    // Create Prescription with current doctor from JWT
+    public Prescription createPrescriptionForDoctor(java.util.Map<String, Object> prescriptionData, String doctorEmail) {
+        try {
+            System.out.println("DEBUG: Starting prescription creation for doctor: " + doctorEmail);
+            
+            // Find patient
+            Long patientId = Long.valueOf(prescriptionData.get("patientId").toString());
+            User patient = userService.findById(patientId);
+            if (patient == null) {
+                throw new RuntimeException("Patient not found with ID: " + patientId);
+            }
+            System.out.println("DEBUG: Found patient: " + patient.getName());
+            
+            // Find doctor user
+            User doctorUser = userService.findByEmail(doctorEmail);
+            if (doctorUser == null) {
+                throw new RuntimeException("Doctor not found with email: " + doctorEmail);
+            }
+            System.out.println("DEBUG: Found doctor user: " + doctorUser.getName());
+            
+            // Find existing doctor profile from database
+            java.util.List<com.example.medicine.med_pres.model.Doctor> allDoctors = 
+                doctorService.getAllDoctors();
+            
+            com.example.medicine.med_pres.model.Doctor doctor = null;
+            for (com.example.medicine.med_pres.model.Doctor d : allDoctors) {
+                if (d.getUser() != null && doctorEmail.equals(d.getUser().getEmail())) {
+                    doctor = d;
+                    break;
+                }
+            }
+            
+            if (doctor == null) {
+                throw new RuntimeException("Doctor profile not found for email: " + doctorEmail);
+            }
+            System.out.println("DEBUG: Found doctor profile: " + doctor.getId());
+            
+            // Create prescription
+            Prescription prescription = new Prescription();
+            prescription.setPatient(patient);
+            prescription.setDoctor(doctor);
+            prescription.setMedicationName((String) prescriptionData.get("medicationName"));
+            prescription.setDosage((String) prescriptionData.get("dosage"));
+            prescription.setFrequency((String) prescriptionData.get("frequency"));
+            prescription.setNotes((String) prescriptionData.get("notes"));
+            
+            System.out.println("DEBUG: Saving prescription...");
+            Prescription saved = prescriptionRepository.save(prescription);
+            System.out.println("DEBUG: Prescription saved with ID: " + saved.getId());
+            
+            return saved;
+        } catch (Exception e) {
+            System.out.println("DEBUG: Error creating prescription: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to create prescription: " + e.getMessage());
+        }
     }
 
     // Get all Prescriptions

@@ -61,17 +61,19 @@ const IssuePrescription = () => {
 
     try {
       const prescriptionData = {
-        patient: { id: parseInt(formData.patientId) },
-        doctor: { id: 1 }, // Current doctor ID
+        patientId: parseInt(formData.patientId),
         medicationName: formData.medicationName,
         dosage: formData.dosage,
         frequency: formData.frequency,
         notes: formData.notes
       }
 
+      console.log('Sending prescription data:', prescriptionData)
       await prescriptionService.createPrescription(prescriptionData)
+      alert('Prescription issued successfully!')
       navigate('/manage-appointments')
     } catch (error) {
+      console.error('Prescription error:', error)
       setError('Failed to issue prescription. Please try again.')
     } finally {
       setLoading(false)
@@ -79,7 +81,8 @@ const IssuePrescription = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-medical-gradient">
+      <div className="max-w-2xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Issue Prescription</h1>
         <p className="mt-2 text-gray-600">Create a digital prescription for the patient</p>
@@ -210,6 +213,7 @@ const IssuePrescription = () => {
             </button>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

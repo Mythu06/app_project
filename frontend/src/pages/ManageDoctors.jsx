@@ -6,9 +6,12 @@ const ManageDoctors = () => {
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [formData, setFormData] = useState({
-    userId: '',
+    name: '',
+    email: '',
+    password: '',
     specialization: '',
-    clinicName: ''
+    clinicName: '',
+    location: ''
   })
 
   useEffect(() => {
@@ -29,18 +32,34 @@ const ManageDoctors = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     try {
-      const doctorData = {
-        user: { id: parseInt(formData.userId) },
-        specialization: formData.specialization,
-        clinicName: formData.clinicName
-      }
+      // Create doctor via registration endpoint (creates both user and doctor)
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          passwordHash: formData.password,
+          role: 'DOCTOR',
+          specialization: formData.specialization,
+          clinicName: formData.clinicName,
+          location: formData.location
+        })
+      })
       
-      await doctorService.createDoctor(doctorData)
-      setShowAddForm(false)
-      setFormData({ userId: '', specialization: '', clinicName: '' })
-      fetchDoctors()
+      if (response.ok) {
+        setShowAddForm(false)
+        setFormData({ name: '', email: '', password: '', specialization: '', clinicName: '', location: '' })
+        fetchDoctors()
+      } else {
+        const error = await response.text()
+        alert('Error creating doctor: ' + error)
+      }
     } catch (error) {
       console.error('Error creating doctor:', error)
+      alert('Error creating doctor: ' + error.message)
     }
   }
 
@@ -53,7 +72,8 @@ const ManageDoctors = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-medical-gradient">
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Manage Doctors</h1>
@@ -77,30 +97,65 @@ const ManageDoctors = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    User ID
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    value={formData.userId}
-                    onChange={(e) => setFormData({...formData, userId: e.target.value})}
-                    placeholder="Enter user ID with DOCTOR role"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Specialization
+                    Doctor Name *
                   </label>
                   <input
                     type="text"
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="Enter doctor's full name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    placeholder="doctor@example.com"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Password *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    placeholder="Enter password"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Specialization *
+                  </label>
+                  <select
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     value={formData.specialization}
                     onChange={(e) => setFormData({...formData, specialization: e.target.value})}
-                    placeholder="e.g., Cardiology"
-                  />
+                  >
+                    <option value="">Select Specialization</option>
+                    <option value="Cardiology">Cardiology</option>
+                    <option value="General Medicine">General Medicine</option>
+                    <option value="Pediatrics">Pediatrics</option>
+                    <option value="Orthopedics">Orthopedics</option>
+                    <option value="Dermatology">Dermatology</option>
+                    <option value="Neurology">Neurology</option>
+                    <option value="Psychiatry">Psychiatry</option>
+                  </select>
                 </div>
                 
                 <div>
@@ -114,6 +169,48 @@ const ManageDoctors = () => {
                     onChange={(e) => setFormData({...formData, clinicName: e.target.value})}
                     placeholder="e.g., City Hospital"
                   />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                  >
+                    <option value="">Select Location</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Coimbatore">Coimbatore</option>
+                    <option value="Madurai">Madurai</option>
+                    <option value="Tiruchirappalli">Tiruchirappalli (Trichy)</option>
+                    <option value="Salem">Salem</option>
+                    <option value="Tirunelveli">Tirunelveli</option>
+                    <option value="Vellore">Vellore</option>
+                    <option value="Erode">Erode</option>
+                    <option value="Thanjavur">Thanjavur</option>
+                    <option value="Dindigul">Dindigul</option>
+                    <option value="Cuddalore">Cuddalore</option>
+                    <option value="Kanchipuram">Kanchipuram</option>
+                    <option value="Tiruvannamalai">Tiruvannamalai</option>
+                    <option value="Villupuram">Villupuram</option>
+                    <option value="Thoothukudi">Thoothukudi (Tuticorin)</option>
+                    <option value="Nagercoil">Nagercoil</option>
+                    <option value="Karur">Karur</option>
+                    <option value="Kumbakonam">Kumbakonam</option>
+                    <option value="Tirupur">Tirupur</option>
+                    <option value="Ambur">Ambur</option>
+                    <option value="Hosur">Hosur</option>
+                    <option value="Krishnagiri">Krishnagiri</option>
+                    <option value="Namakkal">Namakkal</option>
+                    <option value="Pudukkottai">Pudukkottai</option>
+                    <option value="Ramanathapuram">Ramanathapuram</option>
+                    <option value="Sivakasi">Sivakasi</option>
+                    <option value="Virudhunagar">Virudhunagar</option>
+                    <option value="Pollachi">Pollachi</option>
+                    <option value="Ooty">Ooty (Udhagamandalam)</option>
+                  </select>
                 </div>
                 
                 <div className="flex justify-end space-x-3 mt-6">
@@ -175,6 +272,7 @@ const ManageDoctors = () => {
           ))}
         </div>
       )}
+      </div>
     </div>
   )
 }

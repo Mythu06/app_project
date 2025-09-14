@@ -40,7 +40,11 @@ public class AuthController {
         if (user != null && passwordEncoder.matches(password, user.getPasswordHash())) {
             String token = jwtService.generateToken(user.getEmail(), user.getRole().toString());
             System.out.println("DEBUG: Login successful, token generated");
-            return ResponseEntity.ok(Map.of("token", token, "role", user.getRole()));
+            return ResponseEntity.ok(Map.of(
+                "token", token, 
+                "role", user.getRole(),
+                "name", user.getName()
+            ));
         }
         System.out.println("DEBUG: Login failed - invalid credentials");
         return ResponseEntity.badRequest().body("Invalid credentials");

@@ -89,23 +89,20 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-medical-gradient py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+        <div className="text-center">
+          <div className="medical-icon-large mb-4">🏥</div>
+          <h2 className="text-4xl font-bold text-white mb-2">
+            Create Account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="text-blue-100 text-lg">
             Join Medical Appointment & Prescription Tracker
           </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-            <p className="text-blue-800 text-sm text-center">
-              <strong>Live System:</strong> Registration creates real accounts in the database
-            </p>
-          </div>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <div className="card mt-8">
+          <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
@@ -192,6 +189,7 @@ const Register = () => {
                 <option value="PATIENT">Patient</option>
                 <option value="DOCTOR">Doctor</option>
               </select>
+
             </div>
             
             {/* Doctor-specific fields */}
@@ -250,11 +248,35 @@ const Register = () => {
                     onChange={handleChange}
                   >
                     <option value="">Select Location</option>
-                    <option value="Downtown">Downtown</option>
-                    <option value="Uptown">Uptown</option>
-                    <option value="Midtown">Midtown</option>
-                    <option value="Suburbs">Suburbs</option>
-                    <option value="Other">Other</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Coimbatore">Coimbatore</option>
+                    <option value="Madurai">Madurai</option>
+                    <option value="Tiruchirappalli">Tiruchirappalli (Trichy)</option>
+                    <option value="Salem">Salem</option>
+                    <option value="Tirunelveli">Tirunelveli</option>
+                    <option value="Vellore">Vellore</option>
+                    <option value="Erode">Erode</option>
+                    <option value="Thanjavur">Thanjavur</option>
+                    <option value="Dindigul">Dindigul</option>
+                    <option value="Cuddalore">Cuddalore</option>
+                    <option value="Kanchipuram">Kanchipuram</option>
+                    <option value="Tiruvannamalai">Tiruvannamalai</option>
+                    <option value="Villupuram">Villupuram</option>
+                    <option value="Thoothukudi">Thoothukudi (Tuticorin)</option>
+                    <option value="Nagercoil">Nagercoil</option>
+                    <option value="Karur">Karur</option>
+                    <option value="Kumbakonam">Kumbakonam</option>
+                    <option value="Tirupur">Tirupur</option>
+                    <option value="Ambur">Ambur</option>
+                    <option value="Hosur">Hosur</option>
+                    <option value="Krishnagiri">Krishnagiri</option>
+                    <option value="Namakkal">Namakkal</option>
+                    <option value="Pudukkottai">Pudukkottai</option>
+                    <option value="Ramanathapuram">Ramanathapuram</option>
+                    <option value="Sivakasi">Sivakasi</option>
+                    <option value="Virudhunagar">Virudhunagar</option>
+                    <option value="Pollachi">Pollachi</option>
+                    <option value="Ooty">Ooty (Udhagamandalam)</option>
                   </select>
                 </div>
               </>
@@ -279,7 +301,8 @@ const Register = () => {
               </Link>
             </span>
           </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )

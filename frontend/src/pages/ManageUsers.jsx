@@ -6,6 +6,8 @@ const ManageUsers = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [usersPerPage] = useState(5)
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
@@ -141,6 +143,14 @@ const ManageUsers = () => {
     })
   }
 
+  // Pagination logic
+  const indexOfLastUser = currentPage * usersPerPage
+  const indexOfFirstUser = indexOfLastUser - usersPerPage
+  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser)
+  const totalPages = Math.ceil(users.length / usersPerPage)
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber)
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -150,7 +160,8 @@ const ManageUsers = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-medical-gradient">
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
         <p className="mt-2 text-gray-600">Manage system users and their roles</p>
@@ -176,7 +187,7 @@ const ManageUsers = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
+              {currentUsers.map((user) => (
                 <tr key={user.id} className="table-row">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
@@ -217,12 +228,108 @@ const ManageUsers = () => {
 
       <div className="mt-6 flex justify-between items-center">
         <p className="text-sm text-gray-700">
-          Showing {users.length} users
+          Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, users.length)} of {users.length} users
         </p>
         <button onClick={handleAddUser} className="btn-primary">
           Add New User
         </button>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <nav className="flex space-x-2">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            
+            {[...Array(totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => paginate(index + 1)}
+                className={`px-3 py-2 text-sm font-medium rounded-md ${
+                  currentPage === index + 1
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+            
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </nav>
+        </div>
+      )}
+      
+      {/* Add User Modal */}
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-content p-6">
+            <h3 className="text-lg font-semibold mb-4">Add New User</h3>
+            <div className="space-y-4">
+              <input
+                type="text"
+                name="name"
+                placeholder="Full Name"
+                value={newUser.name}
+                onChange={handleInputChange}
+                className="form-input"
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={newUser.email}
+                onChange={handleInputChange}
+                className="form-input"
+              />
+              <input
+                type="password"
+                name="passwordHash"
+                placeholder="Password"
+                value={newUser.passwordHash}
+                onChange={handleInputChange}
+                className="form-input"
+              />
+              <select
+                name="role"
+                value={newUser.role}
+                onChange={handleInputChange}
+                className="form-input"
+              >
+                <option value="PATIENT">Patient</option>
+                <option value="DOCTOR">Doctor</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveUser}
+                className="btn-primary"
+              >
+                Add User
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Edit User Modal */}
       {showEditModal && (
@@ -274,6 +381,7 @@ const ManageUsers = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

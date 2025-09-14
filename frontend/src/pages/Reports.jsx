@@ -4,24 +4,112 @@ const Reports = () => {
   const [stats, setStats] = useState({})
   const [loading, setLoading] = useState(true)
 
-  // Mock statistics data
-  const mockStats = {
-    totalUsers: 156,
-    totalDoctors: 23,
-    totalPatients: 128,
-    totalAppointments: 342,
-    pendingAppointments: 15,
-    approvedAppointments: 298,
-    totalPrescriptions: 189,
-    activeUsers: 145
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+
+      // Fetch data from multiple endpoints
+      const [usersRes, doctorsRes, appointmentsRes, prescriptionsRes] = await Promise.all([
+        fetch('http://localhost:8080/api/users', { headers }),
+        fetch('http://localhost:8080/api/doctors', { headers }),
+        fetch('http://localhost:8080/api/appointments', { headers }),
+        fetch('http://localhost:8080/api/prescriptions', { headers })
+      ])
+
+      const users = usersRes.ok ? await usersRes.json() : []
+      const doctors = doctorsRes.ok ? await doctorsRes.json() : []
+      const appointments = appointmentsRes.ok ? await appointmentsRes.json() : []
+      const prescriptions = prescriptionsRes.ok ? await prescriptionsRes.json() : []
+
+      // Calculate statistics
+      const totalPatients = users.filter(user => user.role === 'PATIENT').length
+      const pendingAppointments = appointments.filter(apt => apt.status === 'PENDING').length
+      const approvedAppointments = appointments.filter(apt => apt.status === 'APPROVED').length
+
+      // Generate recent activity from real data
+      const recentActivity = []
+      
+      // Recent users (last 3)
+      const recentUsers = users.slice(-3).reverse()
+      recentUsers.forEach(user => {
+        if (user.role === 'PATIENT') {
+          recentActivity.push({
+            icon: '👤',
+            message: `New patient registered: ${user.name}`,
+            time: 'Recently'
+          })
+        } else if (user.role === 'DOCTOR') {
+          recentActivity.push({
+            icon: '👨⚕️',
+            message: `New doctor joined: Dr. ${user.name}`,
+            time: 'Recently'
+          })
+        }
+      })
+      
+      // Recent appointments (last 3)
+      const recentAppointments = appointments.slice(-3).reverse()
+      recentAppointments.forEach(apt => {
+        if (apt.status === 'APPROVED') {
+          recentActivity.push({
+            icon: '📅',
+            message: `Appointment approved for ${apt.patient?.name || 'Patient'}`,
+            time: 'Recently'
+          })
+        } else if (apt.status === 'PENDING') {
+          recentActivity.push({
+            icon: '⏳',
+            message: `New appointment request from ${apt.patient?.name || 'Patient'}`,
+            time: 'Recently'
+          })
+        }
+      })
+      
+      // Recent prescriptions (last 2)
+      const recentPrescriptions = prescriptions.slice(-2).reverse()
+      recentPrescriptions.forEach(prescription => {
+        recentActivity.push({
+          icon: '💊',
+          message: `Prescription issued: ${prescription.medicationName} to ${prescription.patient?.name || 'Patient'}`,
+          time: 'Recently'
+        })
+      })
+
+      setStats({
+        totalUsers: users.length,
+        totalDoctors: doctors.length,
+        totalPatients,
+        totalAppointments: appointments.length,
+        pendingAppointments,
+        approvedAppointments,
+        totalPrescriptions: prescriptions.length,
+        activeUsers: users.length,
+        recentActivity: recentActivity.slice(0, 5) // Show only top 5 activities
+      })
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+      // Fallback to empty stats
+      setStats({
+        totalUsers: 0,
+        totalDoctors: 0,
+        totalPatients: 0,
+        totalAppointments: 0,
+        pendingAppointments: 0,
+        approvedAppointments: 0,
+        totalPrescriptions: 0,
+        activeUsers: 0
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => {
-    // Simulate loading
-    setTimeout(() => {
-      setStats(mockStats)
-      setLoading(false)
-    }, 500)
+    fetchStats()
   }, [])
 
   if (loading) {
@@ -33,7 +121,8 @@ const Reports = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-medical-gradient">
+      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">System Reports</h1>
         <p className="mt-2 text-gray-600">Overview of system statistics and analytics</p>
@@ -127,29 +216,22 @@ const Reports = () => {
       <div className="card mt-8">
         <h3 className="text-xl font-bold text-gray-900 mb-4">Recent System Activity</h3>
         <div className="space-y-3">
-          <div className="flex items-center justify-between py-2 border-b border-gray-100">
-            <div className="flex items-center">
-              <span className="medical-icon mr-3">👤</span>
-              <span className="text-gray-700">New patient registered: Sarah Wilson</span>
-            </div>
-            <span className="text-sm text-gray-500">2 hours ago</span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b border-gray-100">
-            <div className="flex items-center">
-              <span className="medical-icon mr-3">📅</span>
-              <span className="text-gray-700">Appointment approved by Dr. Smith</span>
-            </div>
-            <span className="text-sm text-gray-500">4 hours ago</span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-b border-gray-100">
-            <div className="flex items-center">
-              <span className="medical-icon mr-3">💊</span>
-              <span className="text-gray-700">Prescription issued to John Patient</span>
-            </div>
-            <span className="text-sm text-gray-500">6 hours ago</span>
-          </div>
+          {stats.recentActivity && stats.recentActivity.length > 0 ? (
+            stats.recentActivity.map((activity, index) => (
+              <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100">
+                <div className="flex items-center">
+                  <span className="medical-icon mr-3">{activity.icon}</span>
+                  <span className="text-gray-700">{activity.message}</span>
+                </div>
+                <span className="text-sm text-gray-500">{activity.time}</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500 text-center py-4">No recent activity</p>
+          )}
         </div>
       </div>
+    </div>
     </div>
   )
 }

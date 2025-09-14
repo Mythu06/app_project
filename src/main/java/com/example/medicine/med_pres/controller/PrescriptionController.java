@@ -22,8 +22,14 @@ public class PrescriptionController {
 
     @PostMapping
     @PreAuthorize("hasRole('DOCTOR') or hasRole('ADMIN')")
-    public ResponseEntity<Prescription> createPrescription(@RequestBody Prescription prescription) {
-        return ResponseEntity.ok(prescriptionService.createPrescription(prescription));
+    public ResponseEntity<Prescription> createPrescription(@RequestBody java.util.Map<String, Object> prescriptionData, Authentication authentication) {
+        String doctorEmail = authentication.getName();
+        System.out.println("DEBUG: Creating prescription by doctor: " + doctorEmail);
+        
+        Prescription prescription = prescriptionService.createPrescriptionForDoctor(prescriptionData, doctorEmail);
+        System.out.println("DEBUG: Prescription created with ID: " + prescription.getId());
+        
+        return ResponseEntity.ok(prescription);
     }
 
     @GetMapping
